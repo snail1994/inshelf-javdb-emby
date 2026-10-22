@@ -10,21 +10,21 @@
 
 ## 效果
 
-| 页面 | 显示 |
-|---|---|
-| JavDB 列表页 | 每张影片卡片标题旁出现一个小徽标 |
+| 页面        | 显示                  |
+| --------- | ------------------- |
+| JavDB 列表页 | 每张影片卡片标题旁出现一个小徽标    |
 | JavDB 详情页 | 影片信息下方出现一行状态 + 跳转链接 |
 
 徽标含义：
 
-| 徽标 | 含义 | 能做什么 |
-|---|---|---|
-| 绿色 `✓ 已入库` | Emby 里找到了这个番号 | 点击打开 Emby 影片详情 |
-| 灰色 `未入库` | 索引正常、识别率正常，确实没找到 | 详情页可点「在 Emby 搜索」 |
-| 黄色 `无法判断` | 文件名大多不含番号，或缓存过期 | 不误报「未入库」 |
-| 蓝色 `检测中…` | 正在首次同步/刷新媒体库 | 稍等 |
-| 橙色 `配置 Emby` | 还没填地址或 API Key | 点击打开设置 |
-| 红色 `Emby 未连接` | 地址、Key、网络或证书有问题 | 点击打开设置 |
+| 徽标            | 含义               | 能做什么             |
+| ------------- | ---------------- | ---------------- |
+| 绿色 `✓ 已入库`    | Emby 里找到了这个番号    | 点击打开 Emby 影片详情   |
+| 灰色 `未入库`      | 索引正常、识别率正常，确实没找到 | 详情页可点「在 Emby 搜索」 |
+| 黄色 `无法判断`     | 文件名大多不含番号，或缓存过期  | 不误报「未入库」         |
+| 蓝色 `检测中…`     | 正在首次同步/刷新媒体库     | 稍等               |
+| 橙色 `配置 Emby`  | 还没填地址或 API Key   | 点击打开设置           |
+| 红色 `Emby 未连接` | 地址、Key、网络或证书有问题  | 点击打开设置           |
 
 > 为什么不是简单的「在库 / 不在库」？因为 Emby 里很多文件名是中文标题，根本不含番号。脚本会计算「能识别出番号的比例」，比例太低时显示「无法判断」，避免把明明在库的影片误报成「未入库」。
 
@@ -314,27 +314,26 @@ npm run check   # build + test
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 ```
 
-2. 在 `scripts/build.mjs` 的 `ORDER` 里、`sites/javdb.js` 之后加一行：
+1. 在 `scripts/build.mjs` 的 `ORDER` 里、`sites/javdb.js` 之后加一行：
 
 ```js
 'src/sites/example.js',
 ```
 
-3. 在 `src/main.js` 里注册：
+1. 在 `src/main.js` 里注册：
 
 ```js
 Inshelf.siteRegistry.register(Inshelf.sites.example);
 ```
 
-4. 在 `src/storage.js` 的 `defaultConfig().sites` 里加：
+1. 在 `src/storage.js` 的 `defaultConfig().sites` 里加：
 
 ```js
 example: { enabled: true, showList: true, showDetail: true },
 ```
 
-5. 在 `tests/adapters.test.mjs` 里给 `parseDetailCode` / `parseListTitle` 加纯函数测试。
-
-6. `npm run check`，然后安装新的 `dist`。
+1. 在 `tests/adapters.test.mjs` 里给 `parseDetailCode` / `parseListTitle` 加纯函数测试。
+2. `npm run check`，然后安装新的 `dist`。
 
 > 站点适配器只负责「从 DOM 里拿番号、拿插入位置」，不负责匹配、状态、UI。这样加网站不会碰核心逻辑。
 
@@ -366,11 +365,11 @@ Inshelf.servers.jellyfin = {
 };
 ```
 
-2. 在 `scripts/build.mjs` 的 `ORDER` 里加 `'src/servers/jellyfin.js'`。
-3. 在 `src/main.js` 里注册 `Inshelf.serverRegistry.register(Inshelf.servers.jellyfin);`。
-4. 在 `src/storage.js` 的 `defaultConfig().servers` 里加默认配置。
-5. 在 `tests/adapters.test.mjs` 用假 `http` 测试分页、401、URL 解析。
-6. `npm run check`。
+1. 在 `scripts/build.mjs` 的 `ORDER` 里加 `'src/servers/jellyfin.js'`。
+2. 在 `src/main.js` 里注册 `Inshelf.serverRegistry.register(Inshelf.servers.jellyfin);`。
+3. 在 `src/storage.js` 的 `defaultConfig().servers` 里加默认配置。
+4. 在 `tests/adapters.test.mjs` 用假 `http` 测试分页、401、URL 解析。
+5. `npm run check`。
 
 设置面板会根据 `fields` 自动生成表单；核心的番号解析、索引、状态机、徽标都不需要改。
 
@@ -402,6 +401,8 @@ Inshelf.servers.jellyfin = {
   buildItemUrl(config, item)             // -> string
 }
 ```
+
+
 
 `fetchLibrary` 的 `items` 形状：
 

@@ -107,7 +107,10 @@
       out.push({
         code: found[0],
         element: item,
-        mount: titleEl || item.querySelector('.box') || item,
+        // Mount inside the <strong> that holds the code, not at the end of
+        // `.video-title`: the title box is often clipped to one line, so a
+        // badge appended after a long title is invisible.
+        mount: strong || titleEl || item.querySelector('.box') || item,
         titleEl: titleEl || null
       });
     }

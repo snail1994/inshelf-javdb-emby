@@ -136,7 +136,11 @@
         container.className += ' inshelf-badges-overlay';
         mount.style.position = mount.style.position || 'relative';
       }
-      mount.appendChild(container);
+      if (mount.classList && mount.classList.contains('video-title') && mount.firstChild) {
+        mount.insertBefore(container, mount.firstChild);
+      } else {
+        mount.appendChild(container);
+      }
     }
 
     // MutationObserver watches the whole document. Re-rendering identical

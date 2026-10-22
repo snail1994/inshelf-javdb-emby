@@ -184,3 +184,38 @@ test('JavDB pure parsers extract codes from titles', () => {
   assert.equal(javdb.isActive({ hostname: 'javdb.com' }), true);
   assert.equal(javdb.isActive({ hostname: 'example.com' }), false);
 });
+
+test('JavDB list items mount the badge at the code, not the clipped title tail', () => {
+  function makeItem(strongText, titleText) {
+    const strong = strongText == null ? null : { textContent: strongText };
+    const title = {
+      textContent: `${strongText || ''} ${titleText || ''}`.trim(),
+      querySelector(sel) {
+        return sel === 'strong' ? strong : null;
+      },
+      classList: { contains: (name) => name === 'video-title' },
+      firstChild: {}
+    };
+    const item = {
+      querySelector(sel) {
+        if (sel === '.video-title') return title;
+        if (sel === 'a[href*="/v/"]') return null;
+        return null;
+      }
+    };
+    return { item, title, strong };
+  }
+
+  const withStrong = makeItem('FC2-4958983', '約束された神回');
+  const withoutStrong = makeItem(null, 'FC2-4958983 約束された神回');
+  const doc = {
+    querySelectorAll: () => [withStrong.item, withoutStrong.item]
+  };
+
+  const items = javdb.getListItems(doc);
+  assert.equal(items.length, 2);
+  assert.equal(items[0].code, 'FC2-4958983');
+  assert.equal(items[0].mount, withStrong.strong);
+  assert.equal(items[1].code, 'FC2-4958983');
+  assert.equal(items[1].mount, withoutStrong.title);
+});
