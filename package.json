@@ -1,10 +1,28 @@
 {
   "name": "inshelf-javdb-emby",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "在 JavDB 页面显示影片是否已收入 Emby 库的 Tampermonkey 脚本",
   "license": "MIT",
   "author": "snail1994 <snail9941122@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snail1994/inshelf-javdb-emby.git"
+  },
+  "bugs": {
+    "url": "https://github.com/snail1994/inshelf-javdb-emby/issues"
+  },
+  "homepage": "https://github.com/snail1994/inshelf-javdb-emby#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "tampermonkey",
+    "userscript",
+    "javdb",
+    "emby",
+    "jellyfin"
+  ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test tests/core.test.mjs tests/adapters.test.mjs tests/build.test.mjs",

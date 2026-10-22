@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Inshelf · JavDB Emby 入库检测
 // @namespace    https://github.com/snail1994/inshelf-javdb-emby
-// @version      0.1.0
+// @version      0.1.1
 // @description  在 JavDB 列表页/详情页显示影片是否已收入 Emby 媒体库，可点击跳转。
 // @author       snail1994
 // @license      MIT
 // @homepageURL  https://github.com/snail1994/inshelf-javdb-emby
 // @supportURL   https://github.com/snail1994/inshelf-javdb-emby/issues
+// @updateURL    https://raw.githubusercontent.com/snail1994/inshelf-javdb-emby/main/dist/inshelf-javdb-emby.user.js
+// @downloadURL  https://raw.githubusercontent.com/snail1994/inshelf-javdb-emby/main/dist/inshelf-javdb-emby.user.js
 // @match        *://javdb.com/*
 // @match        *://*.javdb.com/*
 // @match        *://javdb*.com/*

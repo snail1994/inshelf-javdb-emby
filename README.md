@@ -62,11 +62,23 @@ dist/inshelf-javdb-emby.user.js
 2. 删掉编辑器里的默认内容，把 `dist/inshelf-javdb-emby.user.js` 的全部内容粘贴进去。
 3. 按 `Ctrl+S`（macOS 是 `Cmd+S`）保存。
 
+**方式 C：从 GitHub 安装（仓库上传后）**
+
+浏览器打开：
+
+```text
+https://raw.githubusercontent.com/snail1994/inshelf-javdb-emby/main/dist/inshelf-javdb-emby.user.js
+```
+
+Tampermonkey 会识别 `.user.js` 并弹出安装页。如果 GitHub 用户名或仓库名不是这个，把 URL 换成你自己的。
+
 > 安装脚本**不需要** Node.js。Node 只在修改源码、重新构建时需要。
 
 ### 3. 更新
 
-当前没有配置自动更新地址。更新时重新下载新的 `dist/inshelf-javdb-emby.user.js`，重复上面的安装步骤，Tampermonkey 会覆盖旧版本。
+- 从 GitHub 安装：脚本头已配置 `@updateURL`，Tampermonkey 会定期检查 `dist` 的更新。
+- 本地安装：重新下载/拖入新的 `dist/inshelf-javdb-emby.user.js`，覆盖旧版本。
+- 如果 GitHub 用户名/仓库名不同，先改 `src/userscript-header.txt` 的 `@updateURL` / `@downloadURL`，再重新构建。
 
 ---
 
@@ -256,6 +268,31 @@ npm run check   # build + test
 - `scripts/build.mjs` 的 `ORDER` 决定拼接顺序；构建时会校验 `src/` 下每个 `.js` 都在 `ORDER` 里，漏了会报错。
 - 新增文件后，记得同时更新 `ORDER`。
 
+### 发布到 GitHub
+
+仓库已按公开项目准备：`.gitignore`、MIT License、`main` 分支、版本 tag、GitHub Actions CI（构建 + 测试 + 校验 `dist` 是否最新）。
+
+远端 `origin` 预留为：
+
+```text
+https://github.com/snail1994/inshelf-javdb-emby.git
+```
+
+首次推送：
+
+```bash
+git push -u origin main
+git push --tags
+```
+
+如果 GitHub 用户名/仓库名不同，先改这三处再推送：
+
+- `package.json` 的 `repository`、`bugs`、`homepage`
+- `src/userscript-header.txt` 的 `@homepageURL`、`@supportURL`、`@updateURL`、`@downloadURL`
+- `README.md` 里的 GitHub 链接
+
+> 推送前请先在 GitHub 创建空仓库（不要勾选初始化 README），否则 `git push` 可能被拒绝。
+
 ---
 
 ## 如何新增适配器
@@ -420,10 +457,10 @@ Inshelf.servers.jellyfin = {
 - 番号识别是启发式的；极冷门格式可能漏掉。
 - 非管理员 Emby Key 可能读不到 `Path`，识别率会很低。
 - 最多同步 5 万部影片；大库会被截断。
-- 当前没有自动更新 URL；更新需手动重装 `dist`。
-- 本环境无法直连 javdb.com，选择器基于现有开源脚本对真实 DOM 的记录；如果 JavDB 改版，需要更新 `src/sites/javdb.js`。
+- 从 GitHub 安装时由 Tampermonkey 按 `@updateURL` 检查更新；本地安装仍需手动重装 `dist`。
+- 开发环境通过本地代理抓取 JavDB；选择器基于真实页面 DOM，如果 JavDB 改版，需要更新 `src/sites/javdb.js`。
 - 没有在 Safari 上专门测试。
-- 仓库元数据里的 GitHub 地址是占位；当前未推送远程仓库。
+- GitHub 地址按 `snail1994/inshelf-javdb-emby` 预留；若实际用户名/仓库名不同，需同步修改 `package.json`、`src/userscript-header.txt` 和 README。当前尚未推送远程仓库。
 
 ---
 
