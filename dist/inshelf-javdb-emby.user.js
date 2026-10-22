@@ -1591,9 +1591,38 @@
     return badge;
   }
 
+  function stateSignature(code, states) {
+    var ids = Object.keys(states || {}).sort();
+    var parts = [code || ''];
+    for (var i = 0; i < ids.length; i++) {
+      var s = states[ids[i]] || {};
+      parts.push([
+        ids[i],
+        s.status || '',
+        s.count || 0,
+        s.item && s.item.id ? s.item.id : '',
+        s.ts || 0,
+        s.coverage == null ? '' : s.coverage,
+        s.reason || '',
+        s.serverName || '',
+        s.message || ''
+      ].join(':'));
+    }
+    return parts.join('|');
+  }
+
   function renderList(doc, opts) {
     var mount = opts.mount;
     if (!mount || !doc.createElement) return;
+
+    var states = opts.states || {};
+    var ids = Object.keys(states);
+
+    if (!ids.length) {
+      var stale = mount.querySelector ? mount.querySelector('.inshelf-badges') : null;
+      if (stale && stale.parentNode) stale.parentNode.removeChild(stale);
+      return;
+    }
 
     var container = mount.querySelector ? mount.querySelector('.inshelf-badges') : null;
     if (!container) {
@@ -1606,14 +1635,12 @@
       mount.appendChild(container);
     }
 
+    // MutationObserver watches the whole document. Re-rendering identical
+    // badges would itself trigger another scan and loop forever.
+    var sig = stateSignature(opts.code, states);
+    if (container.getAttribute('data-inshelf-sig') === sig) return;
+    container.setAttribute('data-inshelf-sig', sig);
     container.textContent = '';
-    var states = opts.states || {};
-    var ids = Object.keys(states);
-
-    if (!ids.length) {
-      if (container.parentNode) container.parentNode.removeChild(container);
-      return;
-    }
 
     ids.forEach(function (id) {
       container.appendChild(makeBadge(doc, states[id], opts.code, opts.ctx));
@@ -1660,27 +1687,34 @@
     var mount = opts.mount;
     if (!mount || !doc.createElement || !mount.parentNode) return;
 
-    var row = mount.nextElementSibling;
-    if (!row || !row.classList || !row.classList.contains('inshelf-detail-row')) {
+    var states = opts.states || {};
+    var ids = Object.keys(states);
+
+    var current = mount.nextElementSibling;
+    var isOurs = current && current.classList && current.classList.contains('inshelf-detail-row');
+
+    if (!ids.length) {
+      if (isOurs && current.parentNode) current.parentNode.removeChild(current);
+      return;
+    }
+
+    var row = isOurs ? current : null;
+    if (!row) {
       row = doc.createElement('div');
       row.className = 'inshelf-detail-row';
       mount.parentNode.insertBefore(row, mount.nextSibling);
     }
 
+    var sig = stateSignature(opts.code, states)
+      + '|' + Math.floor((opts.now || Date.now()) / 60000);
+    if (row.getAttribute('data-inshelf-sig') === sig) return;
+    row.setAttribute('data-inshelf-sig', sig);
     row.textContent = '';
 
     var codeLabel = doc.createElement('span');
     codeLabel.className = 'inshelf-code';
     codeLabel.textContent = opts.code;
     row.appendChild(codeLabel);
-
-    var states = opts.states || {};
-    var ids = Object.keys(states);
-
-    if (!ids.length) {
-      if (row.parentNode) row.parentNode.removeChild(row);
-      return;
-    }
 
     ids.forEach(function (id) {
       var state = states[id];
@@ -2227,6 +2261,8 @@
 
     function scan() {
       if (!activeSite) return;
+      // Turbo/PJAX can swap the body; make sure the settings entry survives.
+      renderGear();
 
       try {
         if (activeSite.isDetailPage(doc) && siteOption(activeSite.id, 'showDetail')) {

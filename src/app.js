@@ -101,6 +101,8 @@
 
     function scan() {
       if (!activeSite) return;
+      // Turbo/PJAX can swap the body; make sure the settings entry survives.
+      renderGear();
 
       try {
         if (activeSite.isDetailPage(doc) && siteOption(activeSite.id, 'showDetail')) {
