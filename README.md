@@ -4,7 +4,7 @@
 
 这是一个 Tampermonkey（篡改猴）用户脚本。它只读取你的 Emby 媒体库，不会修改、删除、下载或播放任何东西。
 
-> 当前版本：`0.1.0`。支持 **JavDB + Emby**。代码按适配器架构编写，后续可以加 JavBus、MissAV、Jellyfin 等，见[如何新增适配器](#如何新增适配器)。
+> 当前版本：`0.1.1`。只支持 **JavDB + Emby**，个人自用。
 
 ---
 
@@ -180,9 +180,9 @@ Tampermonkey 会识别 `.user.js` 并弹出安装页。如果 GitHub 用户名�
 - 只会发送到你填写的 Emby 地址，不会发给第三方。
 - 仍然建议：单独建 `inshelf` Key；公网访问 Emby 时用 HTTPS；不要多人共用管理员 Key。
 
-### 支持 Jellyfin / Plex / JavBus / MissAV 吗？
+### 支持其他网站 / 媒体服务器吗？
 
-当前版本只支持 **JavDB + Emby**。代码是适配器架构，新增网站或媒体服务器只需要加一个适配器文件，不需要改核心匹配逻辑。欢迎按下面的「如何新增适配器」提交 PR。
+当前只支持 **JavDB + Emby**，不支持其他网站或媒体服务器。
 
 ### JavDB 改版了，徽标不见了
 
@@ -217,7 +217,7 @@ Tampermonkey 会识别 `.user.js` 并弹出安装页。如果 GitHub 用户名�
 
 ```bash
 npm run build   # src/ -> dist/inshelf-javdb-emby.user.js
-npm test        # Node 内置测试，22 个用例
+npm test        # Node 内置测试，23 个用例
 npm run check   # build + test
 ```
 
@@ -268,199 +268,17 @@ npm run check   # build + test
 - `scripts/build.mjs` 的 `ORDER` 决定拼接顺序；构建时会校验 `src/` 下每个 `.js` 都在 `ORDER` 里，漏了会报错。
 - 新增文件后，记得同时更新 `ORDER`。
 
-### 发布到 GitHub
-
-仓库已按公开项目准备：`.gitignore`、MIT License、`main` 分支、版本 tag、GitHub Actions CI（构建 + 测试 + 校验 `dist` 是否最新）。
-
-远端 `origin` 预留为：
-
-```text
-https://github.com/snail1994/inshelf-javdb-emby.git
-```
-
-首次推送：
-
-```bash
-git push -u origin main
-git push --tags
-```
-
-如果 GitHub 用户名/仓库名不同，先改这三处再推送：
-
-- `package.json` 的 `repository`、`bugs`、`homepage`
-- `src/userscript-header.txt` 的 `@homepageURL`、`@supportURL`、`@updateURL`、`@downloadURL`
-- `README.md` 里的 GitHub 链接
-
-> 推送前请先在 GitHub 创建空仓库（不要勾选初始化 README），否则 `git push` 可能被拒绝。
-
----
-
-## 如何新增适配器
-
-### 新增一个网站（site adapter）
-
-以 `example.com` 为例：
-
-1. 新建 `src/sites/example.js`：
-
-```js
-(function (root) {
-  'use strict';
-  var Inshelf = root.Inshelf = root.Inshelf || {};
-
-  function parseCode(text) {
-    var list = Inshelf.codes.extract(text || '');
-    return list.length ? list[0] : null;
-  }
-
-  Inshelf.sites.example = {
-    id: 'example',
-    name: 'Example',
-    hosts: [/example\.com/i],
-
-    isActive: function (loc) {
-      return /example\.com/i.test(loc.hostname || '');
-    },
-    isDetailPage: function (doc) {
-      return !!(doc.querySelector && doc.querySelector('.video-detail'));
-    },
-    getDetailCode: function (doc) {
-      var el = doc.querySelector('.video-detail .code');
-      return el ? parseCode(el.textContent) : null;
-    },
-    getDetailMount: function (doc) {
-      return doc.querySelector('.video-detail .info') || doc.querySelector('.video-detail');
-    },
-    getListItems: function (doc) {
-      var out = [];
-      var nodes = doc.querySelectorAll('.movie-list .item');
-      for (var i = 0; i < nodes.length; i++) {
-        var el = nodes[i];
-        var title = el.querySelector('.video-title');
-        var code = title ? parseCode(title.textContent) : null;
-        if (code) out.push({ code: code, element: el, mount: title || el });
-      }
-      return out;
-    },
-
-    parseDetailCode: parseCode,
-    parseListTitle: function (text) { return Inshelf.codes.extract(text || ''); }
-  };
-
-  if (typeof module !== 'undefined' && module.exports) module.exports = Inshelf.sites.example;
-})(typeof globalThis !== 'undefined' ? globalThis : this);
-```
-
-1. 在 `scripts/build.mjs` 的 `ORDER` 里、`sites/javdb.js` 之后加一行：
-
-```js
-'src/sites/example.js',
-```
-
-1. 在 `src/main.js` 里注册：
-
-```js
-Inshelf.siteRegistry.register(Inshelf.sites.example);
-```
-
-1. 在 `src/storage.js` 的 `defaultConfig().sites` 里加：
-
-```js
-example: { enabled: true, showList: true, showDetail: true },
-```
-
-1. 在 `tests/adapters.test.mjs` 里给 `parseDetailCode` / `parseListTitle` 加纯函数测试。
-2. `npm run check`，然后安装新的 `dist`。
-
-> 站点适配器只负责「从 DOM 里拿番号、拿插入位置」，不负责匹配、状态、UI。这样加网站不会碰核心逻辑。
-
-### 新增一个媒体服务器（server adapter）
-
-以 `jellyfin` 为例：
-
-1. 新建 `src/servers/jellyfin.js`，实现这些字段：
-
-```js
-Inshelf.servers.jellyfin = {
-  id: 'jellyfin',
-  name: 'Jellyfin',
-  fields: [
-    { key: 'baseUrl', label: '服务器地址', type: 'url', placeholder: 'http://192.168.1.10:8096' },
-    { key: 'apiKey', label: 'API Key', type: 'password' },
-    { key: 'ttlMinutes', label: '缓存时间（分钟）', type: 'select', options: [5, 15, 30, 60] }
-  ],
-
-  normalizeBaseUrl: function (input) { /* ... */ },
-
-  // 返回 { ok, baseUrl, serverId, serverName, version, message }
-  testConnection: async function (config, http) { /* ... */ },
-
-  // 返回 { items: [{ id, name, originalTitle, path, year }], total, baseUrl }
-  fetchLibrary: async function (config, http, onProgress) { /* ... */ },
-
-  buildItemUrl: function (config, item) { /* ... */ }
-};
-```
-
-1. 在 `scripts/build.mjs` 的 `ORDER` 里加 `'src/servers/jellyfin.js'`。
-2. 在 `src/main.js` 里注册 `Inshelf.serverRegistry.register(Inshelf.servers.jellyfin);`。
-3. 在 `src/storage.js` 的 `defaultConfig().servers` 里加默认配置。
-4. 在 `tests/adapters.test.mjs` 用假 `http` 测试分页、401、URL 解析。
-5. `npm run check`。
-
-设置面板会根据 `fields` 自动生成表单；核心的番号解析、索引、状态机、徽标都不需要改。
-
-### 适配器契约（简版）
-
-站点适配器必须提供：
-
-```js
-{
-  id, name, hosts,
-  isActive(location),
-  isDetailPage(document),
-  getDetailCode(document),      // string | null
-  getDetailMount(document),     // Element | null
-  getListItems(document),       // [{ code, element, mount }]
-  parseDetailCode(text),        // 纯函数，测试用
-  parseListTitle(text)          // 纯函数，测试用
-}
-```
-
-服务器适配器必须提供：
-
-```js
-{
-  id, name, fields,
-  normalizeBaseUrl(input),
-  testConnection(config, http),          // -> { ok, baseUrl, serverId, serverName, version }
-  fetchLibrary(config, http, onProgress),// -> { items, total, baseUrl }
-  buildItemUrl(config, item)             // -> string
-}
-```
-
-
-
-`fetchLibrary` 的 `items` 形状：
-
-```js
-{ id: 'emby-item-id', name: '显示名', originalTitle: '原名', path: '/media/ABC-123.mp4', year: 2024 }
-```
-
-只有 `id` 和 `path` 是必需的；`name` / `originalTitle` 用来提高识别率。
-
 ---
 
 ## 已知限制
 
-- 只支持 **JavDB + Emby**；Jellyfin/Plex、JavBus/MissAV 是后续计划。
+- 只支持 **JavDB + Emby**。
 - 番号识别是启发式的；极冷门格式可能漏掉。
 - 非管理员 Emby Key 可能读不到 `Path`，识别率会很低。
 - 最多同步 5 万部影片；大库会被截断。
 - 从 GitHub 安装时由 Tampermonkey 按 `@updateURL` 检查更新；本地安装仍需手动重装 `dist`。
 - 开发环境通过本地代理抓取 JavDB；选择器基于真实页面 DOM，如果 JavDB 改版，需要更新 `src/sites/javdb.js`。
 - 没有在 Safari 上专门测试。
-- GitHub 地址按 `snail1994/inshelf-javdb-emby` 预留；若实际用户名/仓库名不同，需同步修改 `package.json`、`src/userscript-header.txt` 和 README。当前尚未推送远程仓库。
 
 ---
 
@@ -470,7 +288,7 @@ Inshelf.servers.jellyfin = {
 - [JavdbEmbySkin](https://github.com/9E307/JavdbEmbySkin)：JavDB 界面美化 + 本地收藏管理。
 - [mdcz](https://github.com/ShotHeadman/mdcz)：服务端 JAV 元数据刮削/整理工具，配合 Emby/Jellyfin/Kodi。
 
-本项目只做「入库检测」，代码量小、零依赖、按适配器扩展，适合想自己改选择器或加网站/服务器的人。
+本项目只做「入库检测」，代码量小、零依赖。
 
 ---
 
