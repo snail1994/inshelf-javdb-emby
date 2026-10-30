@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Inshelf · JavDB Emby 入库检测
+// @name         Inshelf · JavDB / 123AV Emby 入库检测
 // @namespace    https://github.com/snail1994/inshelf-javdb-emby
-// @version      0.1.1
-// @description  在 JavDB 列表页/详情页显示影片是否已收入 Emby 媒体库，可点击跳转。
+// @version      0.2.0
+// @description  在 JavDB / 123AV 列表页/详情页显示影片是否已收入 Emby 媒体库，可点击跳转。
 // @author       snail1994
 // @license      MIT
 // @homepageURL  https://github.com/snail1994/inshelf-javdb-emby
@@ -14,6 +14,8 @@
 // @match        *://javdb*.com/*
 // @match        *://*.javdb*.com/*
 // @include      *://*javdb*.com/*
+// @match        *://123av.com/*
+// @match        *://*.123av.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue

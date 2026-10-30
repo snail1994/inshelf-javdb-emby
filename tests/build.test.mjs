@@ -24,7 +24,9 @@ test('build produces a complete userscript', () => {
     assert.match(output, /^\/\/ ==UserScript==/);
     assert.match(output, /@grant\s+GM_xmlhttpRequest/);
     assert.match(output, /@match\s+\*:\/\/javdb\.com\/\*/);
+    assert.match(output, /@match\s+\*:\/\/123av\.com\/\*/);
     assert.match(output, /\/\* ===== src\/core\/codes\.js ===== \*\//);
+    assert.match(output, /\/\* ===== src\/sites\/av123\.js ===== \*\//);
     assert.match(output, /Inshelf\.createApp/);
     assert.match(output, /Inshelf\.serverRegistry\.register/);
     assert.doesNotMatch(output, /^import\s/m);

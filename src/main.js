@@ -15,6 +15,7 @@
   try {
     Inshelf.serverRegistry.register(Inshelf.servers.emby);
     Inshelf.siteRegistry.register(Inshelf.sites.javdb);
+    Inshelf.siteRegistry.register(Inshelf.sites.av123);
 
     var storage = Inshelf.storage.createStorage(
       typeof GM_getValue === 'function' ? GM_getValue : null,

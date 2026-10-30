@@ -27,6 +27,7 @@ export const ORDER = [
   'src/servers/emby.js',
   'src/sites/registry.js',
   'src/sites/javdb.js',
+  'src/sites/av123.js',
   'src/storage.js',
   'src/ui/styles.js',
   'src/ui/toast.js',

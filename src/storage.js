@@ -28,7 +28,8 @@
         }
       },
       sites: {
-        javdb: { enabled: true, showList: true, showDetail: true }
+        javdb: { enabled: true, showList: true, showDetail: true },
+        av123: { enabled: true, showList: true, showDetail: true }
       },
       ui: { gear: 'bottom-right' }
     };

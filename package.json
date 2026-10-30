@@ -1,8 +1,8 @@
 {
   "name": "inshelf-javdb-emby",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
-  "description": "在 JavDB 页面显示影片是否已收入 Emby 库的 Tampermonkey 脚本",
+  "description": "在 JavDB / 123AV 页面显示影片是否已收入 Emby 库的 Tampermonkey 脚本",
   "license": "MIT",
   "author": "snail1994 <snail9941122@gmail.com>",
   "repository": {
@@ -20,6 +20,7 @@
     "tampermonkey",
     "userscript",
     "javdb",
+    "123av",
     "emby",
     "jellyfin"
   ],

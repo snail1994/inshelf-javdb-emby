@@ -221,8 +221,9 @@
     siteSection.appendChild(el(doc, 'div', 'inshelf-section-title', '显示位置'));
     Object.keys(config.sites || {}).forEach(function (siteId) {
       var site = config.sites[siteId] || {};
+      var siteAdapter = Inshelf.siteRegistry && Inshelf.siteRegistry.get(siteId);
       var row = el(doc, 'div', 'inshelf-row');
-      row.appendChild(el(doc, 'span', 'inshelf-help', siteId));
+      row.appendChild(el(doc, 'span', 'inshelf-help', (siteAdapter && siteAdapter.name) || siteId));
 
       var listLabel = el(doc, 'label', 'inshelf-check');
       var listCb = el(doc, 'input');

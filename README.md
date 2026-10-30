@@ -1,19 +1,21 @@
-# Inshelf · JavDB Emby 入库检测
+# Inshelf · JavDB / 123AV Emby 入库检测
 
-在 [JavDB](https://javdb.com) 的列表页、详情页直接显示：这部影片**是否已经收入你的 Emby 媒体库**。已入库的绿色徽标可以点击，直接打开 Emby 里对应的影片。
+在 [JavDB](https://javdb.com) 和 [123AV](https://123av.com) 的列表页、详情页直接显示：这部影片**是否已经收入你的 Emby 媒体库**。已入库的绿色徽标可以点击，直接打开 Emby 里对应的影片。
 
 这是一个 Tampermonkey（篡改猴）用户脚本。它只读取你的 Emby 媒体库，不会修改、删除、下载或播放任何东西。
 
-> 当前版本：`0.1.1`。只支持 **JavDB + Emby**，个人自用。
+> 当前版本：`0.2.0`。支持 **JavDB / 123AV + Emby**，个人自用。
 
 ---
 
 ## 效果
 
-| 页面        | 显示                  |
-| --------- | ------------------- |
-| JavDB 列表页 | 每张影片卡片标题旁出现一个小徽标    |
-| JavDB 详情页 | 影片信息下方出现一行状态 + 跳转链接 |
+| 页面         | 显示                     |
+| ---------- | ---------------------- |
+| JavDB 列表页  | 每张影片卡片标题旁出现一个小徽标       |
+| JavDB 详情页  | 影片信息下方出现一行状态 + 跳转链接    |
+| 123AV 列表页  | 每张影片卡片标题旁出现一个小徽标       |
+| 123AV 详情页  | 影片标题下方出现一行状态 + 跳转链接    |
 
 徽标含义：
 
@@ -100,7 +102,7 @@ Tampermonkey 会识别 `.user.js` 并弹出安装页。如果 GitHub 用户名�
 
 ## 配置
 
-1. 打开 JavDB（`https://javdb.com`），等页面加载完。
+1. 打开 JavDB（`https://javdb.com`）或 123AV（`https://123av.com`），等页面加载完。
 2. 右下角会出现一个圆形齿轮按钮，点它。
 3. 填写：
    - **服务器地址**：例如 `http://192.168.1.10:8096`，或 `http://192.168.1.10:8096/emby`。脚本会自动尝试带 `/emby` 和不带 `/emby` 两种。
@@ -109,11 +111,11 @@ Tampermonkey 会识别 `.user.js` 并弹出安装页。如果 GitHub 用户名�
 4. 点「测试连接」。成功会显示 Emby 的服务器名和版本。
 5. 点「保存」。
 6. 点「同步媒体库」。第一次会拉取全库，影片多时可能需要几十秒。
-7. 回到 JavDB 列表/详情页，徽标会出现。
+7. 回到 JavDB / 123AV 列表/详情页，徽标会出现。
 
 如果齿轮没出现：
 
-- 确认当前网址是 `javdb.com` 或它的子域名。
+- 确认当前网址是 `javdb.com`、`123av.com` 或它们的子域名。
 - 确认 Tampermonkey 里脚本是「启用」状态。
 - 刷新页面。
 - 打开浏览器控制台（F12），看有没有 `Inshelf` 相关报错。
@@ -182,16 +184,17 @@ Tampermonkey 会识别 `.user.js` 并弹出安装页。如果 GitHub 用户名�
 
 ### 支持其他网站 / 媒体服务器吗？
 
-当前只支持 **JavDB + Emby**，不支持其他网站或媒体服务器。
+当前支持 **JavDB / 123AV + Emby**，不支持其他网站或媒体服务器。
 
-### JavDB 改版了，徽标不见了
+### JavDB / 123AV 改版了，徽标不见了
 
-选择器集中在 `src/sites/javdb.js` 顶部。改版后只需要更新选择器常量，重新 `npm run build`。如果你不会改，开 issue 并附上页面截图/HTML 片段。
+选择器集中在 `src/sites/javdb.js` 和 `src/sites/av123.js` 顶部。改版后只需要更新对应适配器，重新 `npm run build`。如果你不会改，开 issue 并附上页面截图/HTML 片段。
 
 ### 为什么列表页有的卡片没有徽标？
 
-- 标题里没有可识别的番号（例如演员名、合集、无码流出版）。
-- 该卡片不是标准 `.movie-list .item` 结构。
+- 标题和链接里没有可识别的番号（例如演员名、合集、无码流出版）。
+- 该卡片不是脚本认识的影片卡片结构。
+- 123AV 目前通过 `a[href*="/v/"]` 和卡片容器识别，若站点换主题，可能需要补选择器。
 - 脚本不会给识别不出番号的卡片硬塞徽标，避免误导。
 
 ---
@@ -217,7 +220,7 @@ Tampermonkey 会识别 `.user.js` 并弹出安装页。如果 GitHub 用户名�
 
 ```bash
 npm run build   # src/ -> dist/inshelf-javdb-emby.user.js
-npm test        # Node 内置测试，23 个用例
+npm test        # Node 内置测试，26 个用例
 npm run check   # build + test
 ```
 
@@ -238,7 +241,8 @@ npm run check   # build + test
 │   │   └── state.js                 # 入库状态机
 │   ├── sites/
 │   │   ├── registry.js              # 站点适配器注册表
-│   │   └── javdb.js                 # JavDB 选择器/解析
+│   │   ├── javdb.js                 # JavDB 选择器/解析
+│   │   └── av123.js                 # 123AV 选择器/解析
 │   ├── servers/
 │   │   ├── registry.js              # 服务器适配器注册表
 │   │   ├── http.js                  # GM_xmlhttpRequest 封装
@@ -272,7 +276,7 @@ npm run check   # build + test
 
 ## 已知限制
 
-- 只支持 **JavDB + Emby**。
+- 只支持 **JavDB / 123AV + Emby**。
 - 番号识别是启发式的；极冷门格式可能漏掉。
 - 非管理员 Emby Key 可能读不到 `Path`，识别率会很低。
 - 最多同步 5 万部影片；大库会被截断。

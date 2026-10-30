@@ -10,9 +10,11 @@ const serverRegistry = require('../src/servers/registry.js');
 const emby = require('../src/servers/emby.js');
 const siteRegistry = require('../src/sites/registry.js');
 const javdb = require('../src/sites/javdb.js');
+const av123 = require('../src/sites/av123.js');
 
 serverRegistry.register(emby);
 siteRegistry.register(javdb);
+siteRegistry.register(av123);
 
 function fakeHttp(handler) {
   return {
@@ -25,6 +27,7 @@ function fakeHttp(handler) {
 test('registries resolve the built-in adapters', () => {
   assert.equal(serverRegistry.get('emby'), emby);
   assert.equal(siteRegistry.get('javdb'), javdb);
+  assert.equal(siteRegistry.get('av123'), av123);
   assert.equal(serverRegistry.get('missing'), null);
   assert.equal(siteRegistry.get('missing'), null);
 });
@@ -218,4 +221,81 @@ test('JavDB list items mount the badge at the code, not the clipped title tail',
   assert.equal(items[0].mount, withStrong.strong);
   assert.equal(items[1].code, 'FC2-4958983');
   assert.equal(items[1].mount, withoutStrong.title);
+});
+
+test('123AV identifies its domain and extracts codes from /v/ URLs', () => {
+  assert.equal(av123.isActive({ hostname: '123av.com' }), true);
+  assert.equal(av123.isActive({ hostname: 'www.123av.com' }), true);
+  assert.equal(av123.isActive({ hostname: 'not123av.com' }), false);
+  assert.equal(av123.isActive({ hostname: '123av.com.example.com' }), false);
+
+  assert.equal(av123.codeFromHref('/ja/dm1/v/fc2-ppv-1633549'), 'FC2-PPV-1633549');
+  assert.equal(
+    av123.codeFromHref('https://123av.com/ja/dm1/v/ABC-123?from=list'),
+    'ABC-123'
+  );
+  assert.equal(av123.codeFromHref('/ja/dm1/v/1234567'), null);
+  assert.equal(av123.parseDetailCode('FC2-PPV-1633549 标题'), 'FC2-PPV-1633549');
+});
+
+test('123AV detail code prefers the URL slug and mounts at the title', () => {
+  const h1 = { textContent: 'FC2-PPV-1633549 标题', getAttribute: () => null };
+  const doc = {
+    location: { pathname: '/ja/dm1/v/fc2-ppv-1633549' },
+    querySelector(sel) {
+      if (sel === 'main h1' || sel === 'h1') return h1;
+      return null;
+    },
+    body: {}
+  };
+
+  assert.equal(av123.getDetailCode(doc), 'FC2-PPV-1633549');
+  assert.equal(av123.getDetailMount(doc), h1);
+
+  const fallback = {
+    location: { pathname: '/ja/dm1/v/1234567' },
+    querySelector(sel) {
+      if (sel === 'main h1') return { textContent: 'ABC-123 标题', getAttribute: () => null };
+      return null;
+    },
+    body: {}
+  };
+  assert.equal(av123.getDetailCode(fallback), 'ABC-123');
+});
+
+test('123AV list items use the film card and deduplicate image/title links', () => {
+  const img = { getAttribute: (name) => (name === 'alt' ? '封面' : null) };
+  const heading = { textContent: 'FC2-PPV-1633549 标题' };
+  const card = {
+    textContent: 'FC2-PPV-1633549 标题',
+    querySelector(sel) {
+      if (sel === 'img') return img;
+      if (sel === 'h3') return heading;
+      return null;
+    },
+    querySelectorAll(sel) {
+      return sel === 'a[href*="/v/"]' ? [anchor, second] : [];
+    }
+  };
+  const anchor = {
+    textContent: '',
+    getAttribute(name) {
+      return name === 'href' ? '/ja/dm1/v/fc2-ppv-1633549' : null;
+    },
+    querySelector: () => null,
+    closest: () => null,
+    parentElement: card
+  };
+  const second = Object.assign({}, anchor, { textContent: 'FC2-PPV-1633549 标题' });
+  const doc = {
+    querySelectorAll(sel) {
+      return sel === 'a[href]' ? [anchor, second] : [];
+    }
+  };
+
+  const items = av123.getListItems(doc);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].code, 'FC2-PPV-1633549');
+  assert.equal(items[0].element, card);
+  assert.equal(items[0].mount, heading);
 });
