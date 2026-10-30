@@ -131,6 +131,7 @@
               code: items[i].code,
               element: items[i].element,
               mount: items[i].mount,
+              overlay: items[i].overlay,
               states: resolveStates(items[i].code).servers,
               ctx: ctx
             });

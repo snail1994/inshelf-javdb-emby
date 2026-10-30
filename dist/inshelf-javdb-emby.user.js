@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Inshelf · JavDB / 123AV Emby 入库检测
 // @namespace    https://github.com/snail1994/inshelf-javdb-emby
-// @version      0.2.0
+// @version      0.2.1
 // @description  在 JavDB / 123AV 列表页/详情页显示影片是否已收入 Emby 媒体库，可点击跳转。
 // @author       snail1994
 // @license      MIT
@@ -1281,13 +1281,23 @@
 
   function findMount(card, anchor) {
     if (card && card.querySelector) {
+      // 123AV clamps the title link to one line. A badge appended inside that
+      // link is in the accessibility tree but visually clipped, so prefer an
+      // overlay on the cover image.
+      var img = card.querySelector('img');
+      if (img) {
+        var cover = (img.closest && img.closest('a')) || img.parentElement || card;
+        return { mount: cover, overlay: true };
+      }
+
       var selectors = ['h1', 'h2', 'h3', 'h4', '.title', '[class*="title"]'];
       for (var i = 0; i < selectors.length; i++) {
         var el = card.querySelector(selectors[i]);
-        if (el) return el;
+        if (el) return { mount: el, overlay: false };
       }
     }
-    return (anchor.textContent || '').trim() ? anchor : (card || anchor);
+    var fallback = (anchor.textContent || '').trim() ? anchor : (card || anchor);
+    return { mount: fallback, overlay: false };
   }
 
   function getListItems(doc) {
@@ -1324,10 +1334,12 @@
       if (!card || seen.indexOf(card) !== -1) continue;
       seen.push(card);
 
+      var mountInfo = findMount(card, anchor);
       out.push({
         code: code,
         element: card,
-        mount: findMount(card, anchor)
+        mount: mountInfo.mount,
+        overlay: mountInfo.overlay
       });
     }
 
@@ -1561,7 +1573,8 @@
 
   var CSS = [
     '.inshelf-badges{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;margin-left:6px;vertical-align:middle;line-height:1.4}',
-    '.inshelf-badges-overlay{position:absolute;left:6px;top:6px;margin:0;z-index:2}',
+    '.inshelf-badges-overlay{position:absolute;left:6px;top:6px;margin:0;z-index:5;display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:calc(100% - 12px);pointer-events:none}',
+    '.inshelf-badges-overlay .inshelf-badge{pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.5)}',
     '.inshelf-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;line-height:1.5;white-space:nowrap;border:1px solid transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif}',
     '.inshelf-in{background:#1f7a4d;color:#e2fff0;border-color:#2f9e68}',
     '.inshelf-out{background:#3a3f46;color:#d3dae3;border-color:#555d68}',
@@ -1830,6 +1843,7 @@
 
     var states = opts.states || {};
     var ids = Object.keys(states);
+    var overlay = !!opts.overlay;
 
     if (!ids.length) {
       var stale = mount.querySelector ? mount.querySelector('.inshelf-badges') : null;
@@ -1840,16 +1854,28 @@
     var container = mount.querySelector ? mount.querySelector('.inshelf-badges') : null;
     if (!container) {
       container = doc.createElement('span');
-      container.className = 'inshelf-badges';
-      if (mount.classList && mount.classList.contains('box')) {
-        container.className += ' inshelf-badges-overlay';
-        mount.style.position = mount.style.position || 'relative';
-      }
       if (mount.classList && mount.classList.contains('video-title') && mount.firstChild) {
         mount.insertBefore(container, mount.firstChild);
       } else {
         mount.appendChild(container);
       }
+    }
+
+    // An overlay badge is attached to the cover image, outside any one-line
+    // title clamp. This is what keeps 123AV's badge visible instead of merely
+    // present in the accessibility tree.
+    var shouldOverlay = overlay || (mount.classList && mount.classList.contains('box'));
+    if (shouldOverlay) {
+      container.className = 'inshelf-badges inshelf-badges-overlay';
+      if (mount.style && !mount.style.position) {
+        var view = doc.defaultView;
+        var position = view && view.getComputedStyle
+          ? view.getComputedStyle(mount).position
+          : '';
+        if (!position || position === 'static') mount.style.position = 'relative';
+      }
+    } else {
+      container.className = 'inshelf-badges';
     }
 
     // MutationObserver watches the whole document. Re-rendering identical
@@ -2509,6 +2535,7 @@
               code: items[i].code,
               element: items[i].element,
               mount: items[i].mount,
+              overlay: items[i].overlay,
               states: resolveStates(items[i].code).servers,
               ctx: ctx
             });

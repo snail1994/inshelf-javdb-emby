@@ -4,7 +4,7 @@
 
 这是一个 Tampermonkey（篡改猴）用户脚本。它只读取你的 Emby 媒体库，不会修改、删除、下载或播放任何东西。
 
-> 当前版本：`0.2.0`。支持 **JavDB / 123AV + Emby**，个人自用。
+> 当前版本：`0.2.1`。支持 **JavDB / 123AV + Emby**，个人自用。
 
 ---
 
@@ -220,7 +220,7 @@ Tampermonkey 会识别 `.user.js` 并弹出安装页。如果 GitHub 用户名�
 
 ```bash
 npm run build   # src/ -> dist/inshelf-javdb-emby.user.js
-npm test        # Node 内置测试，26 个用例
+npm test        # Node 内置测试，27 个用例
 npm run check   # build + test
 ```
 

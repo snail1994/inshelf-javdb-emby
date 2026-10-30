@@ -130,13 +130,23 @@
 
   function findMount(card, anchor) {
     if (card && card.querySelector) {
+      // 123AV clamps the title link to one line. A badge appended inside that
+      // link is in the accessibility tree but visually clipped, so prefer an
+      // overlay on the cover image.
+      var img = card.querySelector('img');
+      if (img) {
+        var cover = (img.closest && img.closest('a')) || img.parentElement || card;
+        return { mount: cover, overlay: true };
+      }
+
       var selectors = ['h1', 'h2', 'h3', 'h4', '.title', '[class*="title"]'];
       for (var i = 0; i < selectors.length; i++) {
         var el = card.querySelector(selectors[i]);
-        if (el) return el;
+        if (el) return { mount: el, overlay: false };
       }
     }
-    return (anchor.textContent || '').trim() ? anchor : (card || anchor);
+    var fallback = (anchor.textContent || '').trim() ? anchor : (card || anchor);
+    return { mount: fallback, overlay: false };
   }
 
   function getListItems(doc) {
@@ -173,10 +183,12 @@
       if (!card || seen.indexOf(card) !== -1) continue;
       seen.push(card);
 
+      var mountInfo = findMount(card, anchor);
       out.push({
         code: code,
         element: card,
-        mount: findMount(card, anchor)
+        mount: mountInfo.mount,
+        overlay: mountInfo.overlay
       });
     }
 

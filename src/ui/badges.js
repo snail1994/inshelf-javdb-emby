@@ -121,6 +121,7 @@
 
     var states = opts.states || {};
     var ids = Object.keys(states);
+    var overlay = !!opts.overlay;
 
     if (!ids.length) {
       var stale = mount.querySelector ? mount.querySelector('.inshelf-badges') : null;
@@ -131,16 +132,28 @@
     var container = mount.querySelector ? mount.querySelector('.inshelf-badges') : null;
     if (!container) {
       container = doc.createElement('span');
-      container.className = 'inshelf-badges';
-      if (mount.classList && mount.classList.contains('box')) {
-        container.className += ' inshelf-badges-overlay';
-        mount.style.position = mount.style.position || 'relative';
-      }
       if (mount.classList && mount.classList.contains('video-title') && mount.firstChild) {
         mount.insertBefore(container, mount.firstChild);
       } else {
         mount.appendChild(container);
       }
+    }
+
+    // An overlay badge is attached to the cover image, outside any one-line
+    // title clamp. This is what keeps 123AV's badge visible instead of merely
+    // present in the accessibility tree.
+    var shouldOverlay = overlay || (mount.classList && mount.classList.contains('box'));
+    if (shouldOverlay) {
+      container.className = 'inshelf-badges inshelf-badges-overlay';
+      if (mount.style && !mount.style.position) {
+        var view = doc.defaultView;
+        var position = view && view.getComputedStyle
+          ? view.getComputedStyle(mount).position
+          : '';
+        if (!position || position === 'static') mount.style.position = 'relative';
+      }
+    } else {
+      container.className = 'inshelf-badges';
     }
 
     // MutationObserver watches the whole document. Re-rendering identical

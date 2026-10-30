@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Inshelf · JavDB / 123AV Emby 入库检测
 // @namespace    https://github.com/snail1994/inshelf-javdb-emby
-// @version      0.2.0
+// @version      0.2.1
 // @description  在 JavDB / 123AV 列表页/详情页显示影片是否已收入 Emby 媒体库，可点击跳转。
 // @author       snail1994
 // @license      MIT

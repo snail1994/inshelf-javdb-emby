@@ -264,7 +264,11 @@ test('123AV detail code prefers the URL slug and mounts at the title', () => {
 });
 
 test('123AV list items use the film card and deduplicate image/title links', () => {
-  const img = { getAttribute: (name) => (name === 'alt' ? '封面' : null) };
+  const cover = { style: {}, parentElement: null, querySelector: () => null };
+  const img = {
+    parentElement: cover,
+    getAttribute: (name) => (name === 'alt' ? '封面' : null)
+  };
   const heading = { textContent: 'FC2-PPV-1633549 标题' };
   const card = {
     textContent: 'FC2-PPV-1633549 标题',
@@ -277,6 +281,7 @@ test('123AV list items use the film card and deduplicate image/title links', () 
       return sel === 'a[href*="/v/"]' ? [anchor, second] : [];
     }
   };
+  cover.parentElement = card;
   const anchor = {
     textContent: '',
     getAttribute(name) {
@@ -297,5 +302,41 @@ test('123AV list items use the film card and deduplicate image/title links', () 
   assert.equal(items.length, 1);
   assert.equal(items[0].code, 'FC2-PPV-1633549');
   assert.equal(items[0].element, card);
+  assert.equal(items[0].mount, cover);
+  assert.equal(items[0].overlay, true);
+});
+
+test('123AV list falls back to the title when a card has no cover image', () => {
+  const heading = { textContent: 'ABC-123 标题' };
+  const anchor = {
+    textContent: 'ABC-123 标题',
+    getAttribute(name) {
+      return name === 'href' ? '/ja/dm1/v/abc-123' : null;
+    },
+    querySelector: () => null,
+    closest: () => null,
+    parentElement: null
+  };
+  const card = {
+    textContent: 'ABC-123 标题',
+    querySelector(sel) {
+      if (sel === 'img') return null;
+      if (sel === 'h3') return heading;
+      return null;
+    },
+    querySelectorAll(sel) {
+      return sel === 'a[href*="/v/"]' ? [anchor] : [];
+    }
+  };
+  anchor.parentElement = card;
+  const doc = {
+    querySelectorAll(sel) {
+      return sel === 'a[href]' ? [anchor] : [];
+    }
+  };
+
+  const items = av123.getListItems(doc);
+  assert.equal(items.length, 1);
   assert.equal(items[0].mount, heading);
+  assert.equal(items[0].overlay, false);
 });

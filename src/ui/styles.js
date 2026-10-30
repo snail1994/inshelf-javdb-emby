@@ -9,7 +9,8 @@
 
   var CSS = [
     '.inshelf-badges{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;margin-left:6px;vertical-align:middle;line-height:1.4}',
-    '.inshelf-badges-overlay{position:absolute;left:6px;top:6px;margin:0;z-index:2}',
+    '.inshelf-badges-overlay{position:absolute;left:6px;top:6px;margin:0;z-index:5;display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:calc(100% - 12px);pointer-events:none}',
+    '.inshelf-badges-overlay .inshelf-badge{pointer-events:auto;box-shadow:0 2px 8px rgba(0,0,0,.5)}',
     '.inshelf-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;line-height:1.5;white-space:nowrap;border:1px solid transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif}',
     '.inshelf-in{background:#1f7a4d;color:#e2fff0;border-color:#2f9e68}',
     '.inshelf-out{background:#3a3f46;color:#d3dae3;border-color:#555d68}',
